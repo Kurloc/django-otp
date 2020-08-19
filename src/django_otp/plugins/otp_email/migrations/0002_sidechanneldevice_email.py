@@ -11,10 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='emaildevice',
-            name='key',
-        ),
         migrations.AddField(
             model_name='emaildevice',
             name='token',

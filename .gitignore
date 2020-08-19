@@ -4,3 +4,6 @@
 /dist/
 /docs/build/
 *.egg-info/
+/venv/
+/.idea/.gitignore
+/.idea/
