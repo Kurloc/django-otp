@@ -1,3 +1,5 @@
+from binascii import unhexlify
+
 from django.core.mail import send_mail
 from django.db import models
 from django.template import Context, Template
@@ -43,6 +45,14 @@ class EmailDevice(ThrottlingMixin, SideChannelDevice):
         null=True,
         help_text='Optional alternative email address to send tokens to'
     )
+    key = models.CharField(max_length=80, validators=[key_validator], default=default_key, help_text="A hex-encoded secret key of up to 40 bytes.")
+
+    @property
+    def bin_key(self):
+        """
+        The secret key as a binary string.
+        """
+        return unhexlify(self.key.encode())
 
     def get_throttle_factor(self):
         return settings.OTP_EMAIL_THROTTLE_FACTOR
@@ -51,7 +61,7 @@ class EmailDevice(ThrottlingMixin, SideChannelDevice):
         """
         Generates a random token and emails it to the user.
         """
-        self.generate_token(valid_secs=settings.OTP_EMAIL_TOKEN_VALIDITY)
+        self.generate_token(valid_secs=settings.OTP_EMAIL_TOKEN_VALIDITY, bin_key=self.bin_key)
 
         context = {'token': self.token}
         if settings.OTP_EMAIL_BODY_TEMPLATE:

@@ -9,6 +9,7 @@ from django.utils.functional import cached_property
 
 from .util import random_number_token
 
+from .oath import hotp, TOTP
 
 class DeviceManager(models.Manager):
     """
@@ -207,20 +208,26 @@ class SideChannelDevice(Device):
     class Meta:
         abstract = True
 
-    def generate_token(self, length=6, valid_secs=300, commit=True):
+    def generate_token(self, bin_key=None, length=6, valid_secs=300, commit=True):
         """
         Generates a token of the specified length, then sets it on the model
         and sets the expiration of the token on the model.
 
         Pass 'commit=False' to avoid calling self.save().
 
+        :param bytes bin_key: Devices secret key for token generation.
         :param int length: Number of decimal digits in the generated token.
         :param int valid_secs: Amount of seconds the token should be valid.
         :param bool commit: Whether to autosave the generated token.
 
         """
         self.token = random_number_token(length)
+
+        if bin_key is not None:
+            self.token = hotp(key=bin_key, counter=0, digits=length)
+
         self.valid_until = timezone.now() + timedelta(seconds=valid_secs)
+        print(self.token)
         if commit:
             self.save()
 
@@ -235,7 +242,7 @@ class SideChannelDevice(Device):
 
         """
         _now = timezone.now()
-
+        print(_now, self.valid_until)
         if (self.token is not None) and (token == self.token) and (_now < self.valid_until):
             self.token = None
             self.valid_until = _now
