@@ -45,7 +45,13 @@ class EmailDevice(ThrottlingMixin, SideChannelDevice):
         null=True,
         help_text='Optional alternative email address to send tokens to'
     )
-    key = models.CharField(max_length=80, validators=[key_validator], default=default_key, help_text="A hex-encoded secret key of up to 40 bytes.")
+    # if settings.OTP_EMAIL_AVOID_SECRET_KEY is True:
+    #     default_key = None
+
+    key = models.CharField(max_length=80,
+                           validators=[key_validator],
+                           default=default_key,
+                           help_text="A hex-encoded secret key of up to 40 bytes.")
 
     @property
     def bin_key(self):
