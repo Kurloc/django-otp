@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name='emaildevice',
             name='key',
             field=models.CharField(default=django_otp.plugins.otp_email.models.default_key, help_text='A hex-encoded secret key of up to 40 bytes.', max_length=80, validators=[django_otp.plugins.otp_email.models.key_validator]),

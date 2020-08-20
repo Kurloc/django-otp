@@ -2,6 +2,7 @@ from binascii import unhexlify
 from os import urandom
 import random
 import string
+import datetime
 
 from django.core.exceptions import ValidationError
 
@@ -81,3 +82,8 @@ def random_number_token(length=6):
         digits = (rand.choice(string.digits) for i in range(length))
 
     return ''.join(digits)
+
+
+def to_integer(dt):
+    epoch = datetime.datetime.utcfromtimestamp(0).astimezone(tz=datetime.timezone.utc)
+    return (dt - epoch).total_seconds()

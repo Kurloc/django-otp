@@ -1,4 +1,6 @@
 from datetime import timedelta
+import datetime
+import time
 
 from django.apps import apps
 from django.conf import settings
@@ -9,7 +11,8 @@ from django.utils.functional import cached_property
 
 from .util import random_number_token
 
-from .oath import hotp, TOTP
+from .oath import hotp, TOTP, totp
+from .util import to_integer
 
 class DeviceManager(models.Manager):
     """
@@ -208,6 +211,7 @@ class SideChannelDevice(Device):
     class Meta:
         abstract = True
 
+
     def generate_token(self, bin_key=None, length=6, valid_secs=300, commit=True):
         """
         Generates a token of the specified length, then sets it on the model
@@ -215,21 +219,23 @@ class SideChannelDevice(Device):
 
         Pass 'commit=False' to avoid calling self.save().
 
-        :param bytes bin_key: Devices secret key for token generation.
+        :param string key: Devices secret key for token generation.
         :param int length: Number of decimal digits in the generated token.
         :param int valid_secs: Amount of seconds the token should be valid.
         :param bool commit: Whether to autosave the generated token.
 
         """
         self.token = random_number_token(length)
-
+        now = timezone.now()
+        self.valid_until = now + timedelta(seconds=valid_secs)
         if bin_key is not None:
-            self.token = hotp(key=bin_key, counter=0, digits=length)
+            epoch = datetime.datetime.utcfromtimestamp(0).astimezone(tz=datetime.timezone.utc)
+            self.token = totp(key=bin_key, step=valid_secs, t0=int(epoch.second), digits=length)
 
-        self.valid_until = timezone.now() + timedelta(seconds=valid_secs)
         print(self.token)
         if commit:
             self.save()
+
 
     def verify_token(self, token):
         """
